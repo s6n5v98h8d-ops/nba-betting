@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0e1116">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="NBA Betting">
+<title>NBA Betting</title>
+<style>
+:root{--bg:#0e1116;--panel:#161b22;--panel2:#1c2230;--line:#2a3240;--text:#e6edf3;
+--muted:#8b98a9;--green:#2ea043;--red:#f85149;--blue:#4493f8;--amber:#d29922}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);
+font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overscroll-behavior-y:contain}
+.wrap{max-width:640px;margin:0 auto;padding:16px 12px 130px}
+h1{font-size:19px;margin:0 0 2px}
+.sub{color:var(--muted);font-size:12px;margin:0 0 14px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+label{display:block;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+input,select{background:var(--panel2);border:1px solid var(--line);color:var(--text);
+border-radius:10px;padding:12px;font-size:16px;width:100%;-webkit-appearance:none;appearance:none}
+.grid{display:grid;gap:10px}
+.g2{grid-template-columns:1fr 1fr}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.card{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.card .k{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.card .v{font-size:19px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums}
+.card.big{grid-column:1/-1;background:#241d0e;border-color:#4d3c12}
+.card.big .v{font-size:32px;color:var(--amber);line-height:1.2}
+button{cursor:pointer;border:1px solid var(--line);background:var(--panel2);color:var(--text);
+border-radius:10px;padding:12px 14px;font-size:15px;font-weight:600;font-family:inherit;
+user-select:none;-webkit-user-select:none;touch-action:manipulation}
+button:active{filter:brightness(1.35)}
+.btn-ghost{background:transparent;font-weight:500;color:var(--muted)}
+.btnrow{display:flex;gap:8px;margin-top:12px}
+.btnrow button{flex:1;font-size:13px;padding:10px 6px}
+.actionbar{position:fixed;left:0;right:0;bottom:0;z-index:10;display:flex;gap:10px;
+max-width:640px;margin:0 auto;padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+background:rgba(14,17,22,.95);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+border-top:1px solid var(--line)}
+.actionbar button{flex:1;height:60px;font-size:17px;letter-spacing:.08em;border-radius:13px}
+.btn-win{background:var(--green);border-color:var(--green);color:#04140a}
+.btn-loss{background:var(--red);border-color:var(--red);color:#1a0503}
+.win{color:var(--green)}.loss{color:var(--red)}
+.bet{background:var(--panel2);border:1px solid var(--line);border-radius:12px;
+padding:11px 12px;margin-bottom:8px}
+.bet.w{box-shadow:inset 3px 0 0 var(--green)}
+.bet.l{box-shadow:inset 3px 0 0 var(--red)}
+.bet-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.bet-idx{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.bet-res{font-size:12px;font-weight:700;letter-spacing:.08em}
+.bet-foot{display:flex;justify-content:space-between;margin-top:6px;font-size:14px;
+font-variant-numeric:tabular-nums}
+.seg{display:flex;gap:6px;margin-bottom:10px}
+.seg button{flex:1;font-size:13px;padding:9px}
+.seg button.on{background:var(--blue);border-color:var(--blue);color:#04121f}
+.empty{color:var(--muted);padding:14px;text-align:center;font-size:14px}
+.hint{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.45}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.stats .card .v{font-size:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>NBA Betting</h1>
+  <p class="sub">Log the odds and stake, tap the result. Losses roll into the next stake.</p>
+
+  <div class="panel">
+    <div class="grid g2">
+      <div><label for="goal">Profit goal</label>
+        <input id="goal" type="number" min="0" step="1" inputmode="decimal" enterkeyhint="done"></div>
+      <div><label for="round">Round stake up to</label>
+        <select id="round">
+          <option value="0.01">$0.01</option><option value="1">$1</option>
+          <option value="5">$5</option><option value="10">$10</option>
+          <option value="25">$25</option><option value="50">$50</option><option value="100">$100</option>
+        </select></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <label>Next bet</label>
+    <div class="grid g2">
+      <div><label for="odds">Odds (decimal)</label>
+        <input id="odds" type="number" min="1.01" step="0.01" inputmode="decimal" enterkeyhint="next"></div>
+      <div><label for="stake">Stake</label>
+        <input id="stake" type="number" min="0" step="0.01" inputmode="decimal" enterkeyhint="done"></div>
+    </div>
+
+    <div class="cards">
+      <div class="card big"><div class="k">Stake now</div><div class="v" id="cStake">$0.00</div></div>
+      <div class="card"><div class="k">Returns if win</div><div class="v" id="cReturn">$0.00</div></div>
+      <div class="card"><div class="k">Net if win</div><div class="v" id="cNetWin">$0.00</div></div>
+      <div class="card"><div class="k">Still to make</div><div class="v" id="cDeficit">$0.00</div></div>
+      <div class="card"><div class="k">Net this session</div><div class="v" id="cNet">$0.00</div></div>
+    </div>
+
+    <div class="grid g2" style="margin-top:10px">
+      <div><label for="bank">Bankroll</label>
+        <input id="bank" type="number" min="0" step="1" inputmode="decimal" value="1000"></div>
+    </div>
+    <div class="hint" id="status"></div>
+    <div class="hint" id="survival"></div>
+  </div>
+
+  <div class="panel">
+    <label>Ledger</label>
+    <div class="seg">
+      <button id="vSess" class="on">This session</button>
+      <button id="vAll">All history</button>
+    </div>
+    <div id="list"></div>
+    <div class="empty" id="empty">No bets logged yet.</div>
+
+    <div class="btnrow">
+      <button class="btn-ghost" id="btnUndo">Undo last</button>
+      <button class="btn-ghost" id="btnNew">New session</button>
+      <button class="btn-ghost" id="btnCsv">Export CSV</button>
+    </div>
+    <div class="btnrow">
+      <button class="btn-ghost" id="btnWipe">Erase all data</button>
+    </div>
+  </div>
+
+  <div class="panel">
+    <label>All-time</label>
+    <div class="stats">
+      <div class="card"><div class="k">Bets</div><div class="v" id="sBets">0</div></div>
+      <div class="card"><div class="k">Won</div><div class="v win" id="sWins">0</div></div>
+      <div class="card"><div class="k">Lost</div><div class="v loss" id="sLosses">0</div></div>
+      <div class="card"><div class="k">Strike</div><div class="v" id="sRate">0%</div></div>
+      <div class="card"><div class="k">Staked</div><div class="v" id="sStaked">$0</div></div>
+      <div class="card"><div class="k">Net</div><div class="v" id="sNet">$0</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="actionbar">
+  <button class="btn-loss" id="btnLoss">LOST</button>
+  <button class="btn-win" id="btnWin">WON</button>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const KEY = 'nba_v1';
+  const state = {
+    goal: 200, odds: 2, roundTo: 1, manualStake: null, bank: 1000,
+    sessionId: 1, sessionStart: new Date().toISOString(),
+    bets: [], view: 'session'
+  };
+
+  const save = () => { try{ localStorage.setItem(KEY, JSON.stringify(state)); }catch(e){} };
+  const load = () => {
+    try{ const r = localStorage.getItem(KEY); if(r) Object.assign(state, JSON.parse(r)); }catch(e){}
+    if(!state.bets) state.bets = [];
+  };
+
+  function money(v){
+    const neg = v < 0;
+    const s = Math.abs(v).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return (neg ? '-$' : '$') + s;
+  }
+  const sesBets = () => state.bets.filter(b => b.sessionId === state.sessionId);
+  const netOf   = arr => arr.reduce((s,b) => s + (b.result==='win' ? b.profit : -b.stake), 0);
+  const netSes  = () => netOf(sesBets());
+  const deficit = () => state.goal - netSes();
+
+  function roundUp(v, step){ return (!step || step <= 0) ? v : Math.ceil(v/step - 1e-9) * step; }
+  function stakeFor(def){
+    if(def <= 0) return 0;
+    const d = state.odds - 1;
+    return d > 0 ? roundUp(def/d, state.roundTo) : 0;
+  }
+  const currentStake = () => state.manualStake === null ? stakeFor(deficit()) : state.manualStake;
+  const setVal = (el,v) => { if(document.activeElement !== el) el.value = v; };
+  const buzz = p => { try{ navigator.vibrate && navigator.vibrate(p); }catch(e){} };
+
+  function fmtDate(iso){
+    const d = new Date(iso);
+    return d.toLocaleDateString(undefined,{day:'numeric',month:'short'}) + ' ' +
+           d.toLocaleTimeString(undefined,{hour:'2-digit',minute:'2-digit'});
+  }
+
+  function render(){
+    setVal($('goal'), state.goal);
+    setVal($('odds'), state.odds.toFixed(2));
+    setVal($('bank'), state.bank);
+    $('round').value = String(state.roundTo);
+
+    const stake = currentStake();
+    const net   = netSes();
+    const def   = deficit();
+
+    setVal($('stake'), stake.toFixed(2));
+    $('cStake').textContent   = money(stake);
+    $('cReturn').textContent  = money(stake * state.odds);
+    $('cNetWin').textContent  = money(net + stake * (state.odds - 1));
+    $('cDeficit').textContent = money(Math.max(0, def));
+    $('cNet').textContent     = money(net);
+    $('cNet').className       = 'v ' + (net > 0 ? 'win' : net < 0 ? 'loss' : '');
+    $('cDeficit').className   = 'v ' + (def <= 0 ? 'win' : '');
+
+    $('status').textContent = state.odds <= 1
+      ? 'Enter odds above 1.01 to calculate a stake.'
+      : def <= 0
+        ? `Target hit. Session net ${money(net)}.`
+        : `Need ${money(def)} more. Next stake ${money(stakeFor(def))} at odds ${state.odds.toFixed(2)}.`;
+
+    const bank = state.bank || 0;
+    let rem = bank, n = 0, d = def, s = stakeFor(d);
+    while(n < 200 && s > 0 && s <= rem){ rem -= s; n++; d += s; s = stakeFor(d); }
+    $('survival').textContent = bank > 0 && def > 0 && state.odds > 1
+      ? `Bankroll ${money(bank)} survives ${n} straight loss${n===1?'':'es'} from here (${money(bank-rem)} used).`
+      : '';
+
+    const show = state.view === 'session' ? sesBets() : state.bets.slice();
+    const list = $('list');
+    list.innerHTML = '';
+    if(show.length === 0){
+      $('empty').style.display = 'block';
+      $('empty').textContent = state.view === 'session'
+        ? 'No bets this session yet.' : 'No bets recorded yet.';
+    } else {
+      $('empty').style.display = 'none';
+      let run = 0;
+      show.forEach(b => {
+        const won = b.result === 'win';
+        if(state.view === 'session') run += won ? b.profit : -b.stake;
+        const idx = state.bets.indexOf(b) + 1;
+        const el = document.createElement('div');
+        el.className = 'bet ' + (won ? 'w' : 'l');
+        el.innerHTML =
+          `<div class="bet-top">
+             <span class="bet-idx">#${idx}${state.view==='all' ? ' · ' + fmtDate(b.ts) : ''}</span>
+             <span class="bet-res ${won?'win':'loss'}">${won?'WON':'LOST'}</span>
+           </div>
+           <div class="bet-foot">
+             <span>${money(b.stake)} @ ${Number(b.odds).toFixed(2)}</span>
+             <span class="${won?'win':'loss'}">${money(won ? b.profit : -b.stake)}${state.view==='session' ? '  ·  net ' + money(run) : ''}</span>
+           </div>`;
+        list.appendChild(el);
+      });
+      if(state.view === 'all'){
+        const foot = document.createElement('div');
+        foot.className = 'hint';
+        foot.textContent = `All-time net across ${show.length} bets: ${money(netOf(show))}`;
+        list.appendChild(foot);
+      }
+    }
+
+    const all = state.bets;
+    const wins = all.filter(b => b.result === 'win').length;
+    $('sBets').textContent   = all.length;
+    $('sWins').textContent   = wins;
+    $('sLosses').textContent = all.length - wins;
+    $('sRate').textContent   = all.length ? Math.round(wins/all.length*100) + '%' : '0%';
+    $('sStaked').textContent = money(all.reduce((s,b) => s + b.stake, 0));
+    const tn = netOf(all);
+    $('sNet').textContent = money(tn);
+    $('sNet').className = 'v ' + (tn > 0 ? 'win' : tn < 0 ? 'loss' : '');
+  }
+
+  $('goal').addEventListener('input', e => { state.goal = parseFloat(e.target.value) || 0; state.manualStake = null; save(); render(); });
+  $('odds').addEventListener('input', e => { state.odds = parseFloat(e.target.value) || 0; state.manualStake = null; save(); render(); });
+  $('round').addEventListener('change', e => { state.roundTo = parseFloat(e.target.value) || 0.01; state.manualStake = null; save(); render(); });
+  $('stake').addEventListener('input', e => { const v = parseFloat(e.target.value); state.manualStake = isNaN(v) ? 0 : v; save(); render(); });
+  $('bank').addEventListener('input', e => { state.bank = parseFloat(e.target.value) || 0; save(); render(); });
+
+  function log(result){
+    const stake = currentStake();
+    if(stake <= 0 || state.odds <= 1) return;
+    state.bets.push({
+      ts: new Date().toISOString(),
+      sessionId: state.sessionId,
+      stake: stake,
+      odds: state.odds,
+      result: result,
+      profit: result === 'win' ? stake * (state.odds - 1) : 0
+    });
+    state.manualStake = null;
+    buzz(result === 'win' ? [15,40,15] : 20);
+    save(); render();
+  }
+  $('btnWin').addEventListener('click', () => log('win'));
+  $('btnLoss').addEventListener('click', () => log('loss'));
+
+  $('btnUndo').addEventListener('click', () => { state.bets.pop(); state.manualStake = null; save(); render(); });
+
+  $('btnNew').addEventListener('click', () => {
+    if(sesBets().length && !confirm('Start a new session? Logged bets stay in All history.')) return;
+    state.sessionId++; state.sessionStart = new Date().toISOString();
+    state.manualStake = null; state.view = 'session';
+    $('vSess').classList.add('on'); $('vAll').classList.remove('on');
+    save(); render();
+  });
+
+  $('btnWipe').addEventListener('click', () => {
+    if(!confirm('Erase every bet ever logged? This cannot be undone.')) return;
+    state.bets = []; state.sessionId = 1; state.manualStake = null;
+    save(); render();
+  });
+
+  $('vSess').addEventListener('click', () => { state.view='session'; $('vSess').classList.add('on'); $('vAll').classList.remove('on'); save(); render(); });
+  $('vAll').addEventListener('click', () => { state.view='all'; $('vAll').classList.add('on'); $('vSess').classList.remove('on'); save(); render(); });
+
+  $('btnCsv').addEventListener('click', () => {
+    const rows = [['n','datetime','session','odds','stake','result','profit_loss','running_net']];
+    let run = 0;
+    state.bets.forEach((b,i) => {
+      run += b.result === 'win' ? b.profit : -b.stake;
+      rows.push([i+1, b.ts, b.sessionId, Number(b.odds).toFixed(2), b.stake.toFixed(2),
+        b.result, (b.result === 'win' ? b.profit : -b.stake).toFixed(2), run.toFixed(2)]);
+    });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([rows.map(r => r.join(',')).join('\n')], { type: 'text/csv' }));
+    a.download = 'nba-bets.csv'; a.click();
+  });
+
+  load(); render();
+})();
+</script>
+</body>
+</html>
